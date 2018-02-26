@@ -1,0 +1,426 @@
+<modification> 
+	<id>Make An Enquiry Instead of Add To Cart - 21745</id>
+	<version>1.0</version>
+	<version>2.X - 3.X</version>
+	<author>opencarttools@gmail.com</author> 
+	
+	<!-- for oc 2.3 and 3.X-->
+	<file name="admin/controller/common/column_left.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[if ($this->user->hasPermission('access', 'sale/order')) {]]></search>
+            <add position="replace"><![CDATA[if ($this->user->hasPermission('access', 'extension/mkenqprolist') && $this->config->get((substr(VERSION,0,3)>='3.0' ? 'module_mkenqpro_status' : 'mkenqpro_status')) ) {
+			if(substr(VERSION,0,3)>='3.0') { 
+				$token_str = 'user_token=' . $this->session->data['user_token'];
+			} else {
+				$token_str = 'token=' . $this->session->data['token'];
+			}
+			$sale[] = array(
+				'name'	   => 'Enquiry Orders',
+				'href'     => $this->url->link('extension/mkenqprolist', $token_str, true),
+				'children' => array()		
+			);
+		}
+		if ($this->user->hasPermission('access', 'sale/order')) {]]></add>
+        </operation> 
+    </file>
+	
+	<!-- for oc 2.2, 2.1 and 2.0-->
+	<file name="admin/controller/common/menu.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[public function index() {]]></search>
+            <add position="replace"><![CDATA[public function index() {
+			$data['mkenqpro_status'] = $this->config->get((substr(VERSION,0,3)>='3.0' ? 'module_mkenqpro_status' : 'mkenqpro_status'));
+			$data['mkenqpro_link'] = $this->url->link('extension/mkenqprolist', 'token=' . $this->session->data['token'], 'SSL');]]></add>
+        </operation>
+    </file>
+	<file name="admin/view/template/common/menu.tpl">
+		<operation error="skip">
+            <search position="replace"><![CDATA[<li><a href="<?php echo $order; ?>"><?php echo $text_order; ?></a></li>]]></search>
+            <add position="replace"><![CDATA[<li><a href="<?php echo $order; ?>"><?php echo $text_order; ?></a></li>
+			<?php if(isset($mkenqpro_status) && $mkenqpro_status) { ?> <li><a href="<?php echo $mkenqpro_link; ?>">Enquiry Orders</a></li> <?php } ?>]]></add>
+        </operation>
+    </file>
+	
+	
+	
+	
+	
+	<!-- catalog model product -->		
+	<file name="catalog/model/catalog/product.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[return array(]]></search>
+            <add position="replace"><![CDATA[if(substr(VERSION,0,3)>='3.0' || substr(VERSION,0,3)=='2.3') {
+				$this->load->model('extension/module/mkenqpro');
+				$mkenqpro_data = $this->model_extension_module_mkenqpro->getmkenqpro($product_id);
+			} else {
+				$this->load->model('module/mkenqpro');				
+				$mkenqpro_data = $this->model_module_mkenqpro->getmkenqpro($product_id);
+			} 
+			if($mkenqpro_data) {
+				if($query->row['quantity'] < 1 && (isset($mkenqpro_data['stockzero']) && $mkenqpro_data['stockzero'] == 1)) {
+					$mkenqpro_data['btntype'] = 1;
+					$mkenqpro_data['flag'] = true; 
+				}
+				$price = ($query->row['discount'] ? $query->row['discount'] : $query->row['price']);
+				$price = ($query->row['special'] ? $query->row['special'] : $price);
+				if($price <= 0 && (isset($mkenqpro_data['pricezero']) && $mkenqpro_data['pricezero'] == 1)) {
+					$mkenqpro_data['btntype'] = 1;
+					$mkenqpro_data['flag'] = true; 
+				}
+				if(strlen($mkenqpro_data['btntext']) <= 0) {
+					$mkenqpro_data['flag'] = false; 
+				}
+			}
+			return array(
+ 			'mkenqpro_btntext' => $mkenqpro_data['btntext'],
+			'mkenqpro_btntype' => $mkenqpro_data['btntype'],
+			'mkenqpro_btnhideprodbox' => $mkenqpro_data['btnhideprodbox'],
+			'mkenqpro_btnhideprodpage' => $mkenqpro_data['btnhideprodpage'],
+			'mkenqpro_prodoption' => $mkenqpro_data['prodoption'],			
+			'mkenqpro_flag' => $mkenqpro_data['flag'], ]]></add>
+        </operation>
+    </file>
+	
+	
+	
+	
+	
+	<!-- module for oc 2.3 and 3.X -->
+	<file name="catalog/controller/extension/module/*.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[$data['products'][] = array(]]></search>
+            <add position="replace"><![CDATA[$mkenqpro_btntext = false; $mkenqpro_btntype = false; $mkenqpro_flag = false;
+			if(isset($result) && isset($result['mkenqpro_btntext']) && $result['mkenqpro_flag']) {
+				$mkenqpro_btntext = $result['mkenqpro_btntext'];
+				$mkenqpro_btntype = $result['mkenqpro_btntype'];
+				$mkenqpro_flag = ($result['mkenqpro_btnhideprodbox']) ? $result['mkenqpro_flag'] : false;
+			} else if(isset($product_info) && isset($product_info['mkenqpro_btntext']) && $product_info['mkenqpro_flag']) {
+				$mkenqpro_btntext = $product_info['mkenqpro_btntext'];
+				$mkenqpro_btntype = $product_info['mkenqpro_btntype'];
+				$mkenqpro_flag = ($product_info['mkenqpro_btnhideprodbox']) ? $product_info['mkenqpro_flag'] : false;
+			}
+			$data['products'][] = array(
+				'mkenqpro_btntext'  => $mkenqpro_btntext,
+				'mkenqpro_btntype'  => $mkenqpro_btntype,
+				'mkenqpro_flag'  => $mkenqpro_flag, 
+			]]></add>
+        </operation>
+    </file>
+	
+	<!-- module for oc 2.0, 2.1 and 2.2 -->
+	<file name="catalog/controller/module/*.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[$data['products'][] = array(]]></search>
+            <add position="replace"><![CDATA[ $mkenqpro_btntext = false; $mkenqpro_btntype = false; $mkenqpro_flag = false;
+			if(isset($result) && isset($result['mkenqpro_btntext']) && $result['mkenqpro_flag']) {
+				$mkenqpro_btntext = $result['mkenqpro_btntext'];
+				$mkenqpro_btntype = $result['mkenqpro_btntype'];
+				$mkenqpro_flag = ($result['mkenqpro_btnhideprodbox']) ? $result['mkenqpro_flag'] : false;
+			} else if(isset($product_info) && isset($product_info['mkenqpro_btntext']) && $product_info['mkenqpro_flag']) {
+				$mkenqpro_btntext = $product_info['mkenqpro_btntext'];
+				$mkenqpro_btntype = $product_info['mkenqpro_btntype'];
+				$mkenqpro_flag = ($product_info['mkenqpro_btnhideprodbox']) ? $product_info['mkenqpro_flag'] : false;
+			}
+			$data['products'][] = array(
+				'mkenqpro_btntext'  => $mkenqpro_btntext,
+				'mkenqpro_btntype'  => $mkenqpro_btntype,
+				'mkenqpro_flag'  => $mkenqpro_flag, 
+			]]></add>
+        </operation>
+    </file>
+	
+	
+	
+	
+	
+	<!-- account wishlist -->
+ 	<file name="catalog/controller/account/wishlist.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[$data['products'][] = array(]]></search>
+            <add position="replace"><![CDATA[ $mkenqpro_btntext = false; $mkenqpro_btntype = false; $mkenqpro_flag = false;
+			if(isset($product_info) && isset($product_info['mkenqpro_btntext']) && $product_info['mkenqpro_flag']) {
+				$mkenqpro_btntext = $product_info['mkenqpro_btntext'];
+				$mkenqpro_btntype = $product_info['mkenqpro_btntype'];
+ 				$mkenqpro_flag = ($product_info['mkenqpro_btnhideprodbox']) ? $product_info['mkenqpro_flag'] : false;
+			} 
+			$data['products'][] = array(
+				'mkenqpro_btntext'  => $mkenqpro_btntext,
+				'mkenqpro_btntype'  => $mkenqpro_btntype,
+				'mkenqpro_flag'  => $mkenqpro_flag, 
+			]]></add>
+        </operation>
+    </file>
+	
+	
+	
+	
+	
+	<!-- related product , category, search, special and brand product thumb -->
+ 	<file name="catalog/controller/product/*.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[$data['products'][] = array(]]></search>
+            <add position="replace"><![CDATA[ $mkenqpro_btntext = false; $mkenqpro_btntype = false; $mkenqpro_flag = false;
+			if(isset($result) && isset($result['mkenqpro_btntext']) && $result['mkenqpro_flag']) {
+				$mkenqpro_btntext = $result['mkenqpro_btntext'];
+ 				$mkenqpro_btntype = $result['mkenqpro_btntype'];
+				$mkenqpro_flag = ($result['mkenqpro_btnhideprodbox']) ? $result['mkenqpro_flag'] : false;
+			} 
+			$data['products'][] = array(
+				'mkenqpro_btntext'  => $mkenqpro_btntext,
+				'mkenqpro_btntype'  => $mkenqpro_btntype,
+				'mkenqpro_flag'  => $mkenqpro_flag, 
+			]]></add>
+        </operation>
+    </file>
+	
+	
+	
+	
+	
+	<!-- product details page --> 
+	<file name="catalog/controller/product/product.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[if ($product_info) {]]></search>
+            <add position="replace"><![CDATA[if ($product_info) {
+			$data['mkenqpro_btntext'] = false;
+			$data['mkenqpro_btntype'] = false;
+			$data['mkenqpro_flag'] = false;
+			if(isset($product_info) && isset($product_info['mkenqpro_btntext']) && $product_info['mkenqpro_flag']) {
+				$data['mkenqpro_btntext'] = $product_info['mkenqpro_btntext'];
+ 				$data['mkenqpro_btntype'] = $product_info['mkenqpro_btntype'];
+				$data['mkenqpro_flag'] = ($product_info['mkenqpro_btnhideprodpage']) ? $product_info['mkenqpro_flag'] : false;
+			}
+			]]></add>
+        </operation>
+    </file>
+
+
+
+
+	<!-- BUTTON TYPE = 1 - REPLACE WITH ADD TO CART--> 
+	<!-- TPL module for oc 2.3 -->
+	<file name="catalog/view/theme/*/template/extension/module/*.tpl">
+		<operation error="skip">
+			<search position="replace"><![CDATA[cart.add]]></search>
+			<add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> addtomkenqpro <?php } else { ?> cart.add <?php } ?>]]></add>
+		</operation>
+ 		 
+		<operation error="skip">
+            <search position="replace"><![CDATA[<i class="fa fa-shopping-cart"></i>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> <i class="fa fa-envelope"></i> <?php } else { ?> <i class="fa fa-shopping-cart"></i> <?php } ?>]]></add>
+        </operation>
+		
+		<operation error="skip">
+            <search position="replace"><![CDATA[<?php echo $button_cart; ?>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> <?php echo $product['mkenqpro_btntext']; ?> <?php } else { ?> <?php echo $button_cart; ?> <?php } ?>]]></add>
+        </operation> 		
+    </file>
+	
+	 
+	<!-- TPL module for oc 2.0, 2.1 and 2.2 -->
+	<file name="catalog/view/theme/*/template/module/*.tpl">
+		<operation error="skip">
+			<search position="replace"><![CDATA[cart.add]]></search>
+			<add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> addtomkenqpro <?php } else { ?> cart.add <?php } ?>]]></add>
+		</operation>
+ 		 
+		<operation error="skip">
+            <search position="replace"><![CDATA[<i class="fa fa-shopping-cart"></i>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> <i class="fa fa-envelope"></i> <?php } else { ?> <i class="fa fa-shopping-cart"></i> <?php } ?>]]></add>
+        </operation>
+		
+		<operation error="skip">
+            <search position="replace"><![CDATA[<?php echo $button_cart; ?>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> <?php echo $product['mkenqpro_btntext']; ?> <?php } else { ?> <?php echo $button_cart; ?> <?php } ?>]]></add>
+        </operation> 		
+    </file>
+	
+	
+	
+	
+	<!-- account wishlist --> 
+	<file name="catalog/view/theme/*/template/account/wishlist.tpl">
+		<operation error="skip">
+			<search position="replace"><![CDATA[cart.add]]></search>
+			<add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> addtomkenqpro <?php } else { ?> cart.add <?php } ?>]]></add>
+		</operation>
+ 		 
+		<operation error="skip">
+            <search position="replace"><![CDATA[<i class="fa fa-shopping-cart"></i>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> <i class="fa fa-envelope"></i> <?php } else { ?> <i class="fa fa-shopping-cart"></i> <?php } ?>]]></add>
+        </operation>
+		
+		<operation error="skip">
+            <search position="replace"><![CDATA[<?php echo $button_cart; ?>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> <?php echo $product['mkenqpro_btntext']; ?> <?php } else { ?> <?php echo $button_cart; ?> <?php } ?>]]></add>
+        </operation> 		
+    </file>	
+	
+	
+	
+	
+	
+	<!-- Tpl module for related product , category, search, special and brand product thumb --> 
+	<file name="catalog/view/theme/*/template/product/*.tpl">
+		<operation error="skip">
+			<search position="replace"><![CDATA[cart.add]]></search>
+			<add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> addtomkenqpro <?php } else { ?> cart.add <?php } ?>]]></add>
+		</operation>
+ 		 
+		<operation error="skip">
+            <search position="replace"><![CDATA[<i class="fa fa-shopping-cart"></i>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> <i class="fa fa-envelope"></i> <?php } else { ?> <i class="fa fa-shopping-cart"></i> <?php } ?>]]></add>
+        </operation>
+		
+		<operation error="skip">
+            <search position="replace"><![CDATA[<?php echo $button_cart; ?>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 1) { ?> <?php echo $product['mkenqpro_btntext']; ?> <?php } else { ?> <?php echo $button_cart; ?> <?php } ?>]]></add>
+        </operation> 		
+    </file> 
+	
+	
+	
+	
+	<!-- Tpl for product details page --> 
+	<file name="catalog/view/theme/*/template/product/product.tpl"> 
+		<operation error="skip">
+            <search position="replace"><![CDATA[id="button-cart"]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($mkenqpro_flag) && $mkenqpro_flag && $mkenqpro_btntype == 1) { ?> onclick="addtomkenqproprodpage()"; <?php } else { ?> id="button-cart" <?php } ?>]]></add>
+        </operation>
+		
+		<operation error="skip">
+            <search position="replace"><![CDATA[<?php echo $button_cart; ?>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($mkenqpro_flag) && $mkenqpro_flag && $mkenqpro_btntype == 1) { ?> <?php echo $mkenqpro_btntext; ?> <?php } else { ?> <?php echo $button_cart; ?> <?php } ?>]]></add>
+        </operation> 
+    </file>
+	
+	
+	
+	
+	
+	
+	
+	<!-- BUTTON TYPE = 2 - KEEP BOTH ADD TO CART AND ENQUIRY, QUOTE ETC--> 
+	<!-- for oc 2.3 -->
+	<file name="catalog/view/theme/*/template/extension/module/*.tpl">
+		<operation error="skip">
+			<search position="replace"><![CDATA[<?php if ($product['price']) { ?>]]></search>
+			<add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 2) { ?> 
+				<button class="w3-btn w3-yellow w3-border" onclick="addtomkenqpro('<?php echo $product['product_id']; ?>')";><i class="fa fa-envelope"></i> <span class="hidden-xs hidden-sm hidden-md"><?php echo $product['mkenqpro_btntext']; ?></span></button> 
+			<?php } ?>
+			<?php if ($product['price']) { ?>]]></add>
+		</operation> 	
+    </file>
+	
+	<!-- TPL module for oc 2.0, 2.1 and 2.2 -->
+	<file name="catalog/view/theme/*/template/module/*.tpl">
+		<operation error="skip">
+			<search position="replace"><![CDATA[<?php if ($product['price']) { ?>]]></search>
+			<add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 2) { ?> 
+				<button class="w3-btn w3-yellow w3-border" onclick="addtomkenqpro('<?php echo $product['product_id']; ?>')";><i class="fa fa-envelope"></i> <span class="hidden-xs hidden-sm hidden-md"><?php echo $product['mkenqpro_btntext']; ?></span></button> 
+			<?php } ?>
+			<?php if ($product['price']) { ?>]]></add>
+		</operation> 	
+    </file>
+	
+	
+	
+	
+	
+	
+	<!-- account wishlist --> 
+	<file name="catalog/view/theme/*/template/account/wishlist.tpl">
+		<operation error="skip">
+			<search position="replace"><![CDATA[<td class="text-right"><button type="button"]]></search>
+			<add position="replace"><![CDATA[<td class="text-right">
+			<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 2) { ?> 
+				<button class="w3-btn w3-yellow w3-border" style="padding:8px 10px;margin:0;" data-toggle="tooltip" title="<?php echo $product['mkenqpro_btntext']; ?>" onclick="addtomkenqpro('<?php echo $product['product_id']; ?>')";><i class="fa fa-envelope"></i> </button> 
+			<?php } ?>
+			<button type="button"]]></add>
+		</operation> 	
+    </file>
+	
+	
+	
+	
+	
+	
+	<!-- Tpl module for related product , category, search, special and brand product thumb --> 
+	<file name="catalog/view/theme/*/template/product/*.tpl">
+		<operation error="skip">
+			<search position="replace"><![CDATA[<?php if ($product['price']) { ?>]]></search>
+			<add position="replace"><![CDATA[<?php if(isset($product['mkenqpro_flag']) && $product['mkenqpro_flag'] && $product['mkenqpro_btntype'] == 2) { ?> 
+				<button class="w3-btn w3-yellow w3-border" onclick="addtomkenqpro('<?php echo $product['product_id']; ?>')";><i class="fa fa-envelope"></i> <span class="hidden-xs hidden-sm hidden-md"><?php echo $product['mkenqpro_btntext']; ?></span></button> 
+			<?php } ?>
+			<?php if ($product['price']) { ?>]]></add>
+		</operation>		
+    </file> 
+	
+	
+	
+	
+	
+	
+	<!-- Tpl module for product details page --> 	 
+	<file name="catalog/view/theme/*/template/product/product.tpl"> 
+		<operation error="skip">
+            <search position="replace"><![CDATA[<input type="hidden" name="product_id" value="<?php echo $product_id; ?>" />]]></search>
+            <add position="replace"><![CDATA[<input type="hidden" name="product_id" value="<?php echo $product_id; ?>" />
+ 			<?php if(isset($mkenqpro_flag) && $mkenqpro_flag && $mkenqpro_btntype == 2) { ?> 
+				<br />
+				<button class="w3-btn w3-yellow w3-border" onclick="addtomkenqproprodpage()";><i class="fa fa-envelope"></i> <span class="hidden-xs hidden-sm hidden-md"><?php echo $mkenqpro_btntext; ?></span></button> 
+				<br />
+			<?php } ?>]]></add>
+        </operation> 
+    </file>
+	
+	
+	
+	
+	
+	
+	<!-- header quoation link -->
+	<file name="catalog/controller/common/header.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[public function index() {]]></search>
+            <add position="replace"><![CDATA[public function index() {
+			$data['mkenqpro_status'] = $this->config->get((substr(VERSION,0,3)>='3.0' ? 'module_mkenqpro_status' : 'mkenqpro_status'));
+			if(substr(VERSION,0,3)>='3.0' || substr(VERSION,0,3)=='2.3') { 
+				$data['modpathcart'] = 'extension/module/mkenqprocart';
+			} else {
+				$data['modpathcart'] = 'module/mkenqprocart';
+			}]]></add> 
+        </operation>
+    </file> 
+	
+	<file name="catalog/view/theme/*/template/common/header.tpl">
+		<operation error="skip">
+            <search position="replace"><![CDATA[<li><a href="<?php echo $shopping_cart; ?>" title="<?php echo $text_shopping_cart; ?>"><i class="fa fa-shopping-cart"></i> <span class="hidden-xs hidden-sm hidden-md"><?php echo $text_shopping_cart; ?></span></a></li>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($mkenqpro_status) && $mkenqpro_status) { ?>
+			<li><a href="index.php?route=<?php echo $modpathcart;?>" title="Enquiry Cart"><i class="fa fa-envelop-cart"></i> <span class="hidden-xs hidden-sm hidden-md">Enquiry Cart</span></a></li>
+			<?php } ?>
+			<li><a href="<?php echo $shopping_cart; ?>" title="<?php echo $text_shopping_cart; ?>"><i class="fa fa-shopping-cart"></i> <span class="hidden-xs hidden-sm hidden-md"><?php echo $text_shopping_cart; ?></span></a></li>]]></add>
+        </operation> 
+    </file> 
+	
+	
+	
+	
+	
+	
+	<!-- put module at footer --> 	
+	<file name="catalog/controller/common/footer.php">
+		<operation error="skip">
+            <search position="replace"><![CDATA[public function index() {]]></search>
+            <add position="replace"><![CDATA[public function index() {
+  			$data['mkenqpro_module'] = (substr(VERSION,0,3)>='3.0' || substr(VERSION,0,3)=='2.3') ? $this->load->controller('extension/module/mkenqpro') : $this->load->controller('module/mkenqpro');]]></add> 
+        </operation>
+    </file>  
+	
+	<file name="catalog/view/theme/*/template/common/footer.tpl">
+		<operation error="skip">
+            <search position="replace"><![CDATA[</body>]]></search>
+            <add position="replace"><![CDATA[<?php if(isset($mkenqpro_module)) { echo $mkenqpro_module; } ?> </body>]]></add>
+        </operation>
+    </file>
+</modification>

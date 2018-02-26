@@ -1,0 +1,14 @@
+User-agent: * 
+
+Disallow: /admin/
+Disallow: /contrib/
+Disallow: /doc/
+Disallow: /install/
+Disallow: /modules/
+Disallow: /lib/
+Disallow: /plugins/
+Disallow: /tmp/
+Disallow: /old/
+Disallow: /new/
+
+Allow: /tmp/cache/

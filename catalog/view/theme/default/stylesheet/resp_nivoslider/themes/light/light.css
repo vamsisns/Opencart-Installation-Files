@@ -1,0 +1,138 @@
+/*
+Skin Name:  Nivo Slider Light Theme
+Skin URI:  http://nivo.dev7studios.com
+Description:  OpenCart Modification by iDiY
+Version:  1.0
+Author:  Gilbert Pellegrom
+Author URI:  http://dev7studios.com
+Supports Thumbs:  true
+ */
+
+.theme-light {
+	margin-bottom: 20px;
+}
+
+.theme-light.slider-wrapper {
+	overflow: hidden;
+	padding: 10px;
+	background: #fff;
+
+	-webkit-box-shadow: 0 1px 4px rgba(0,0,0,.2);
+	box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}
+
+.theme-light .nivoSlider {
+	position: relative;
+	overflow: visible;
+	margin-bottom: 10px;
+	background: #fff url(loading.gif) no-repeat 50% 50%;
+}
+
+.theme-light .nivoSlider img {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	display: none;
+}
+
+.theme-light .nivoSlider a {
+	display: block;
+	border: 0;
+}
+
+.theme-light .nivo-controlNav {
+	position: relative;
+	z-index: 10;
+	padding: 3px 0;
+	text-align: left;
+}
+
+.theme-light .nivo-controlNav a {
+	display: inline-block;
+	margin: 0 2px;
+	width: 10px;
+	height: 10px;
+	border: 0;
+	background: url(bullets.png) no-repeat;
+	text-indent: -9999px;
+}
+
+.theme-light .nivo-controlNav a.active {
+	background-position: 0 100%;
+}
+
+.theme-light .nivo-directionNav a {
+	top: auto;
+	bottom: -36px;
+	z-index: 11;
+	display: block;
+	width: 30px;
+	height: 30px;
+	border: 0;
+	background: url(arrows.png) no-repeat;
+	text-indent: -9999px;
+}
+
+.theme-light .nivo-directionNav a:hover {
+	border-radius: 2px;
+	background-color: #eee;
+}
+
+.theme-light a.nivo-nextNav {
+	right: 0px;
+	background-position: 160% 50%;
+}
+
+.theme-light a.nivo-prevNav {
+	right: 35px;
+	left: auto;
+	background-position: -60% 50%;
+}
+
+.theme-light .nivo-caption {
+	top: 20%;
+	bottom: auto;
+	left: 5%;
+	max-width: 35%;
+	max-height: 70%;
+	background: transparent;
+	opacity: 1;
+}
+
+.theme-light .nivo-caption h1 {
+	margin-bottom: 10px;
+	color: white;
+	text-shadow: 1px 1px rgba(0,0,0,.65);
+	font-weight: bold;
+	font-size: 24px;
+}
+
+.theme-light .nivo-caption p {
+	margin-bottom: 15px;
+	color: white;
+	text-shadow: 1px 1px rgba(0,0,0,.65);
+	font-style: italic;
+	font-weight: bold;
+}
+
+.theme-light .nivo-caption a.button {
+	display: inline-block !important;
+}
+
+.theme-light .nivo-controlNav.nivo-thumbs-enabled {
+	padding: 0;
+	width: 80%;
+}
+
+.theme-light .nivo-controlNav.nivo-thumbs-enabled a {
+	margin: 0 4px 0 0;
+	width: auto;
+	height: auto;
+	background: none;
+}
+
+.theme-light .nivo-controlNav.nivo-thumbs-enabled img {
+	display: block;
+	max-width: 100%;
+	height: auto;
+}
